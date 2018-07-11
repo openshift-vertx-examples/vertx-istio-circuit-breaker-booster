@@ -28,13 +28,23 @@ Create a new project/namespace on the cluster. This is where your application wi
 oc new-project <whatever valid project name you want>
 ```
 
-== Build and deploy the application
+== Build and deploy the application with the Fabric8 Maven Plugin
 
 Execute the following command to build the project and deploy it to OpenShift:
 ```bash
 mvn clean fabric8:deploy -Popenshift
 ```
 Configuration for FMP may be found both in pom.xml and `src/main/fabric8` files/folders.
+
+== Build and deploy the application with the S2I
+
+```bash
+find . | grep openshiftio | grep application | xargs -n 1 oc apply -f
+
+oc new-app --template=vertx-istio-circuit-breaker-greeting -p SOURCE_REPOSITORY_URL=https://github.com/openshiftio-vertx-boosters/vertx-istio-circuit-breaker-booster  -p SOURCE_REPOSITORY_REF=master -p SOURCE_REPOSITORY_DIR=greeting-service
+oc new-app --template=vertx-istio-circuit-breaker-name -p SOURCE_REPOSITORY_URL=https://github.com/openshiftio-vertx-boosters/vertx-istio-circuit-breaker-booster  -p SOURCE_REPOSITORY_REF=master -p SOURCE_REPOSITORY_DIR=name-service
+```
+
 
 = Use Cases
 
