@@ -59,9 +59,7 @@ public class NameServiceVerticle extends AbstractVerticle {
             }
 
             final long round = Math.round((Math.random() * 200) + processingDelay);
-            vertx.setTimer(round, l -> {
-                rc.response().end(name);
-            });
+            vertx.setTimer(round, l -> rc.response().end(name));
         } else {
             rc.response().end(name);
         }

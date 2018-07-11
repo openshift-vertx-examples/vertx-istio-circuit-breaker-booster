@@ -1,0 +1,45 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: vertx-istio-circuit-breaker-gateway
+spec:
+  selector:
+    istio: ingressgateway # use Istio default gateway implementation
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: vertx-istio-circuit-breaker-virtual-service
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - vertx-istio-circuit-breaker-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /breaker/greeting
+    rewrite:
+      uri: /
+    route:
+    - destination:
+        port:
+          number: 8080
+        host: vertx-istio-circuit-breaker-greeting
+  - match:
+    - uri:
+        prefix: /breaker/name
+    rewrite:
+      uri: /
+    route:
+    - destination:
+        port:
+          number: 8080
+        host: vertx-istio-circuit-breaker-name

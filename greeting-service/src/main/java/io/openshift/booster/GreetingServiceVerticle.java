@@ -17,6 +17,7 @@ import io.vertx.reactivex.ext.web.handler.StaticHandler;
 public class GreetingServiceVerticle extends AbstractVerticle {
 
   private WebClient client;
+  private boolean openCircuit = false;
 
   @Override
   public void start(Future<Void> future) {
@@ -30,6 +31,8 @@ public class GreetingServiceVerticle extends AbstractVerticle {
 
     Router router = Router.router(vertx);
     router.get("/api/greeting").handler(this::invoke);
+    router.get("/api/ping").handler(rc -> rc.response().end(new JsonObject().put("content", "Hello OK").encode()));
+    router.get("/api/cb-state").handler(rc -> rc.response().end(openCircuit ? "Open" : "Close"));
     router.get("/health").handler(rc -> rc.response().end("ok"));
     router.get("/*").handler(StaticHandler.create());
 
@@ -49,8 +52,10 @@ public class GreetingServiceVerticle extends AbstractVerticle {
       .rxSend()
       .map(resp -> {
         if (resp.statusCode() == 503) {
+          this.openCircuit = true;
           return "Fallback";
         } else {
+          this.openCircuit = false;
           return resp.bodyAsString();
         }
       })

@@ -32,7 +32,6 @@
   <properties>
     <skip.fmp>false</skip.fmp>
     <vertx.verticle>io.openshift.booster.NameServiceVerticle</vertx.verticle>
-    <!--<vertx.health>/health</vertx.health>-->
   </properties>
 
   <dependencies>

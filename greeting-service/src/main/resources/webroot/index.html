@@ -18,233 +18,240 @@
 <html>
 
 <head>
-    <meta charset="utf-8">
-    <title>Circuit Breaker Mission - Eclipse Vert.x</title>
-    <link rel="stylesheet"
-          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
-          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
-          crossorigin="anonymous">
-    <base href="/breaker/greeting/" />
-    <style>
-        ul {
-            list-style-type: none;
-        }
-
-        li {
-            display: block;
-        }
-
-        div.label {
-            padding: 0.7em 0.2em;
-        }
-    </style>
+  <meta charset="utf-8">
+  <title>Circuit Breaker Mission - Eclipse Vert.x</title>
+  <link rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+        integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+        crossorigin="anonymous">
+  <base href="/breaker/greeting/" />
+  <style>
+    ul {
+      list-style-type: none;
+    }
+    li {
+      display: block;
+    }
+    .from0 {
+      background-color: #eeeeee;
+    }
+    .from1 {
+      background-color: #eeffee;
+    }
+    .from2 {
+      background-color: #eeeeff;
+    }
+    .from3 {
+      background-color: #ffeeee;
+    }
+    .from4 {
+      background-color: #dddddd;
+    }
+    .from5 {
+      background-color: #ddffdd;
+    }
+    .from6 {
+      background-color: #ddddff;
+    }
+    .from7 {
+      background-color: #ffdddd;
+    }
+    .from8 {
+      background-color: #cccccc;
+    }
+    .from9 {
+      background-color: #ccffcc;
+    }
+    .from10 {
+      background-color: #ccccff;
+    }
+    .from11 {
+      background-color: #ffcccc;
+    }
+    .from12 {
+      background-color: #bbbbbb;
+    }
+    .from13 {
+      background-color: #bbffbb;
+    }
+    .from14 {
+      background-color: #bbbbff;
+    }
+    .from15 {
+      background-color: #ffbbbb;
+    }
+    .from16 {
+      background-color: #aaaaaa;
+    }
+    .from17 {
+      background-color: #aaffaa;
+    }
+    .from18 {
+      background-color: #ffaaff;
+    }
+    .from19 {
+      background-color: #999999;
+    }
+    .fallback {
+      background-color: coral;
+    }
+    div.label {
+      padding: 0.7em 0.2em;
+    }
+  </style>
 </head>
 
 <body>
 
 <div class="container">
 
-    <div>
-      <div class="row">
-        <h1>Circuit Breaker Mission - Eclipse Vert.x</h1>
-        <p class="lead">
-          This mission showcases the Circuit Breaker functionality of Istio to handle a fallback scenario where too many requests are being
-          made to a service, which quality of service has started to degrade.
-        </p>
-        <p>
-          Cloud applications are often comprised of many services. And between those services there often can be many interactions.
-          But even if some of those services fail or are unavailable, we may want to offer an alternative response to an error condition,
-          that it does not increase load on service in, which is unavailable because of high load. And to achieve this, we need a generic
-          mechanism over the failed or unavailable service to service communication, which can quickly and easily determine that the services
-          are not functioning properly, hence can either return a default result or fail quickly and gracefully with enough information about
-          the current failure. This mechanism is called circuit breaker.
-        </p>
-        <p>
-          On this page you can invoke the <code>greeting service</code>. This service uses a <code>name
-          service</code>. The invocations are protected by a circuit breaker. You can select the number of concurrent calls to
-          the <code>name service</code> that will be made using the number input field then click the <code>Start</code>
-          button to start
-          calling the <code>name service</code>. Press the <code>Stop</code> button to stop sending requests.
-        </p>
-        <hr />
-          <h1>Instructions</h1>
-          <p>
-              Please reference the mission documentation or <a
-                  href="https://github.com/openshiftio-vertx-boosters/vertx-istio-circuit-breaker-booster/blob/master/README.adoc">README</a>
-              for next steps and instructions.
-          </p>
-      </div>
-        <div class="row">
-            <div class="col-md-6">
-                <div class="row">
-                    <h2>Greeting service</h2>
-                </div>
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="input-group">
-                            <span class="input-group-addon" id="basic-addon1">#</span>
-                            <input type="number" class="form-control" id="max-concurrent" value="10" min="1" max="20"
-                                   placeholder="Max concurrent requests" aria-describedby="basic-addon1"/>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <button id="invoke" type="submit" class="btn btn-primary">Start</button>
-                        <button id="stop" type="submit" class="btn btn-danger">Stop</button>
-                    </div>
-                </div>
-                <div class="row">
-                    <h3>Results:</h3>
-                    <form class="form-inline">
-                        <button id="clear" type="submit" class="btn btn-success">Clear</button>
-                    </form>
-                    <ul id="greeting-result"></ul>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="row">
-                    <h2>Name service</h2>
-                </div>
-                <div class="row">
-                    <div class="label label-success">OK calls: <span id="callsOK" class="badge"></span></div>
-                    <div class="label label-danger">Failed calls: <span id="callsFailed" class="badge"></span></div>
-                    <div class="label label-info">Ratio: <span id="ratio" class="badge"></span></div>
-                    <input type="checkbox" id="addDelay" title="Simulate load">
-                    <label for="addDelay">Simulate load</label>
-                </div>
-                <div class="row">
-                    <h3>Requests:</h3>
-                    <form class="form-inline">
-                        <button id="clear-requests" type="submit" class="btn btn-success">Clear</button>
-                    </form>
-                    <ul id="name-requests"></ul>
-                </div>
-            </div>
-        </div>
+  <div>
+    <div class="row">
+      <h1>Circuit Breaker Mission - Eclipse Vert.x</h1>
+      <p class="lead">
+        This mission showcases the Circuit Breaker functionality of Istio to handle a fallback scenario where too many requests are being
+        made to a service, which quality of service has started to degrade.
+      </p>
+      <p>
+        Cloud applications are often comprised of many services. And between those services there often can be many interactions.
+        But even if some of those services fail or are unavailable, we may want to offer an alternative response to an error condition,
+        that it does not increase load on service in, which is unavailable because of high load. And to achieve this, we need a generic
+        mechanism over the failed or unavailable service to service communication, which can quickly and easily determine that the services
+        are not functioning properly, hence can either return a default result or fail quickly and gracefully with enough information about
+        the current failure. This mechanism is called circuit breaker.
+      </p>
+      <p>
+        On this page you can invoke the <code>greeting service</code>. This service uses a <code>name
+        service</code>. The invocations are protected by a circuit breaker. You can select the number of concurrent calls to
+        the <code>name service</code> that will be made using the number input field then click the <code>Start</code>
+        button to start
+        calling the <code>name service</code>. Press the <code>Stop</code> button to stop sending requests.
+      </p>
+      <hr />
     </div>
+    <div class="row">
+      <div class="col-md-6">
+        <div class="row">
+          <h2>Greeting service</h2>
+        </div>
+        <div class="row">
+          <div class="col-md-3">
+            <div class="input-group">
+              <span class="input-group-addon" id="basic-addon1">#</span>
+              <input type="number" class="form-control" id="max-concurrent" value="10" min="1" max="20"
+                     placeholder="Max concurrent requests" aria-describedby="basic-addon1"/>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <button id="invoke" type="submit" class="btn btn-primary">Start</button>
+            <button id="stop" type="submit" class="btn btn-danger">Stop</button>
+          </div>
+        </div>
+        <div class="row">
+          <h3>Results:</h3>
+          <form class="form-inline">
+            <button id="clear" type="submit" class="btn btn-success">Clear</button>
+          </form>
+          <ul id="greeting-result"></ul>
+        </div>
+      </div>
 
-    <script
-            src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script
-            src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
-            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
-            crossorigin="anonymous"></script>
+      <div class="col-md-6">
+        <div class="row">
+          <h2>Name service</h2>
+        </div>
+        <div class="row">
+          <div class="label label-success">OK calls: <span id="callsOK" class="badge"></span></div>
+          <div class="label label-danger">Failed calls: <span id="callsFailed" class="badge"></span></div>
+          <div class="label label-info">Ratio: <span id="ratio" class="badge"></span></div>
+          <input type="checkbox" id="addDelay" title="Simulate load">
+          <label for="addDelay">Simulate load</label>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <script>
-        var nameServiceUrlBase = document.baseURI.replace("greeting", "name");
+  <script
+    src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script
+    src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+    integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+    crossorigin="anonymous"></script>
 
-        $(document).ready(function () {
-            var workers;
-            const FROM_STR = 'from';
-            const FROM_LEN = FROM_STR.length;
-            const FALLBACK = 'Fallback';
-            var callsOK = 0, callsFailed = 0;
+  <script>
+    const nameServiceUrlBase = document.location.href.replace("greeting", "name");
+    $(document).ready(function () {
+      let workers;
+      const FROM_STR = 'from';
+      const FROM_LEN = FROM_STR.length;
+      const FALLBACK = 'Fallback';
+      let callsOK = 0, callsFailed = 0;
 
-
-            function extractFrom(msg) {
-                var index = msg.lastIndexOf(FROM_STR);
-                if (index !== -1) {
-                    return msg.substring(index + FROM_LEN + 1);
-                }
-                return "";
+      $("#invoke").click(function (e) {
+        let $max = $('#max-concurrent');
+        let workerNumber = Number.parseInt($max.val());
+        // limit workers to 20
+        if(workerNumber > 20) {
+          workerNumber = 20;
+          $max.val(20);
+        }
+        // limit workers to 1
+        if (workerNumber <= 0) {
+          workerNumber = 1;
+          $max.val(1);
+        }
+        // reset stats
+        callsOK = 0;
+        callsFailed = 0;
+        $("#callsOK").text(callsOK);
+        $("#callsFailed").text(callsFailed);
+        $("#ratio").text(0);
+        workers = [];
+        // check whether we want random processing delay
+        const addDelay = $('#addDelay')[0].checked;
+        for (let i = 0; i < workerNumber; i++) {
+          const worker = new Worker('worker.js');
+          worker.onerror = function (e) {
+            console.log(e)
+          };
+          worker.onmessage = function (e) {
+            const msg = e.data.content;
+            const isFallback = msg.indexOf(FALLBACK) !== -1;
+            // do stats
+            if (isFallback) {
+              callsFailed++
+            } else {
+              callsOK++;
             }
-
-            $("#invoke").click(function (e) {
-                var workerNumber = Number.parseInt($('#max-concurrent').val());
-
-                // limit workers to 20
-                if(workerNumber > 20) {
-                    workerNumber = 20;
-                    $('#max-concurrent').val(20);
-                }
-
-                // limit workers to 1
-                if (workerNumber <= 0) {
-                    workerNumber = 1;
-                    $('#max-concurrent').val(1);
-                }
-
-                // reset stats
-                callsOK = 0;
-                callsFailed = 0;
-                $("#callsOK").text(callsOK);
-                $("#callsFailed").text(callsFailed);
-                $("#ratio").text(0);
-
-                workers = [];
-
-                // check whether we want random processing delay
-                var addDelay = $('#addDelay')[0].checked;
-
-                for (var i = 0; i < workerNumber; i++) {
-                  var worker = new Worker('worker.js');
-                    worker.onerror = function (e) {
-                        console.log(e)
-                    };
-                    worker.onmessage = function (e) {
-                        var msg = e.data.content;
-
-                        var isFallback = msg.indexOf(FALLBACK) !== -1;
-
-                        // do stats
-                        if (isFallback) {
-                            callsFailed++
-                        } else {
-                            callsOK++;
-                        }
-                        $("#callsOK").text(callsOK);
-                        $("#callsFailed").text(callsFailed);
-                        $("#ratio").text(callsFailed / callsOK);
-
-                        var fromClass = isFallback ? "fallback" : "from" + e.data.from;
-                        $("#greeting-result").prepend("<li class='" + fromClass + "'>" + JSON.stringify(msg) + "</li>");
-                    };
-                    worker.timer = setInterval(function (from) {
-                        worker.postMessage({'from': from, 'delay': addDelay})
-                    }, ((Math.random() * i * 100) + 200), i);
-
-                    workers[i] = worker;
-                }
-
-                e.preventDefault();
-            });
-
-            $("#stop").click(function (e) {
-                if (workers) {
-                    for (var i = 0; i < workers.length; i++) {
-                        workers[i].terminate();
-                        clearInterval(workers.timer);
-                    }
-
-                    workers = undefined;
-                }
-
-                e.preventDefault();
-            });
-
-            $("#clear").click(function (e) {
-                $("#greeting-result").html("");
-                e.preventDefault();
-            });
-
-            $("#clear-requests").click(function (e) {
-                $("#name-requests").html("");
-                e.preventDefault();
-            });
-
-
-            // SSE
-            function connect() {
-                var nameStateSource = new EventSource(nameServiceUrlBase + '/name-sse');
-                nameStateSource.addEventListener('message', function (e) {
-                    // Request accepted
-                    $("#name-requests").prepend("<li class='from" + extractFrom(e.data) + "'>" + e.data + "</li>");
-                }, false);
-            }
-
-            window.addEventListener("load", connect, false);
-        });
-    </script>
+            $("#callsOK").text(callsOK);
+            $("#callsFailed").text(callsFailed);
+            $("#ratio").text(callsFailed / callsOK);
+            const fromClass = isFallback ? "fallback" : "from" + e.data.from;
+            $("#greeting-result").prepend("<li class='" + fromClass + "'>" + JSON.stringify(msg) + "</li>");
+          };
+          worker.timer = setInterval(function (from) {
+            worker.postMessage({'from': from, 'delay': addDelay})
+          }, ((Math.random() * i * 100) + 200), i);
+          workers[i] = worker;
+        }
+        e.preventDefault();
+      });
+      $("#stop").click(function (e) {
+        if (workers) {
+          for (let i = 0; i < workers.length; i++) {
+            workers[i].terminate();
+            clearInterval(workers.timer);
+          }
+          workers = undefined;
+        }
+        e.preventDefault();
+      });
+      $("#clear").click(function (e) {
+        $("#greeting-result").html("");
+        e.preventDefault();
+      });
+    });
+  </script>
 </div>
 </body>
 
