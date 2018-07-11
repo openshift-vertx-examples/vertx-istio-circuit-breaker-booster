@@ -1,0 +1,205 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: vertx-istio-circuit-breaker-name
+  annotations:
+    description: This template creates a Build Configuration using an S2I builder.
+    tags: instant-app
+parameters:
+- name: SOURCE_REPOSITORY_URL
+  description: The source URL for the application
+  displayName: Source URL
+  required: true
+- name: SOURCE_REPOSITORY_REF
+  description: The branch name for the application
+  displayName: Source Branch
+  value: master
+  required: true
+- name: SOURCE_REPOSITORY_DIR
+  description: The location within the source repo of the application
+  displayName: Source Directory
+  value: .
+  required: true
+- name: GITHUB_WEBHOOK_SECRET
+  description: A secret string used to configure the GitHub webhook.
+  displayName: GitHub Webhook Secret
+  required: true
+  from: '[a-zA-Z0-9]{40}'
+  generate: expression
+objects:
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: vertx-istio-circuit-breaker-name
+    labels:
+      booster: vertx-istio-circuit-breaker-name
+  spec: {}
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: runtime-vertx-istio-circuit-breaker-name
+    labels:
+      booster: vertx-istio-circuit-breaker-name
+  spec:
+    tags:
+    - name: latest
+      from:
+        kind: DockerImage
+        name: registry.access.redhat.com/redhat-openjdk-18/openjdk18-openshift
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    name: vertx-istio-circuit-breaker-name
+    labels:
+      booster: vertx-istio-circuit-breaker-name
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: vertx-istio-circuit-breaker-name:latest
+    postCommit: {}
+    resources: {}
+    source:
+      git:
+        uri: ${SOURCE_REPOSITORY_URL}
+        ref: ${SOURCE_REPOSITORY_REF}
+      #contextDir: ${SOURCE_REPOSITORY_DIR}
+      type: Git
+    strategy:
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: runtime-vertx-istio-circuit-breaker-name:latest
+        incremental: true
+        env:
+        - name: MAVEN_ARGS_APPEND
+          value: "-pl ${SOURCE_REPOSITORY_DIR}"
+        - name: ARTIFACT_DIR
+          value: "${SOURCE_REPOSITORY_DIR}/target"
+      type: Source
+    triggers:
+    - github:
+        secret: ${GITHUB_WEBHOOK_SECRET}
+      type: GitHub
+    - type: ConfigChange
+    - imageChange: {}
+      type: ImageChange
+  status:
+    lastVersion: 0
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      auth.istio.io/8080: NONE
+      fabric8.io/iconUrl: img/icons/vertx.svg
+      fabric8.io/git-branch: master
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "9779"
+    labels:
+      expose: "true"
+      app: vertx-istio-circuit-breaker-name
+      provider: fabric8
+      group: io.openshift.booster
+    name: vertx-istio-circuit-breaker-name
+  spec:
+    ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      app: vertx-istio-circuit-breaker-name
+      provider: fabric8
+      group: io.openshift.booster
+- apiVersion: apps.openshift.io/v1
+  kind: DeploymentConfig
+  metadata:
+    annotations:
+      sidecar.istio.io/inject: "true"
+      fabric8.io/iconUrl: img/icons/vertx.svg
+      fabric8.io/git-branch: master
+    labels:
+      app: vertx-istio-circuit-breaker-name
+      provider: fabric8
+      group: io.openshift.booster
+    name: vertx-istio-circuit-breaker-name
+  spec:
+    replicas: 1
+    revisionHistoryLimit: 2
+    selector:
+      app: vertx-istio-circuit-breaker-name
+      provider: fabric8
+      group: io.openshift.booster
+    strategy:
+      rollingParams:
+        timeoutSeconds: 3600
+      type: Rolling
+    template:
+      metadata:
+        annotations:
+          fabric8.io/iconUrl: img/icons/vertx.svg
+          fabric8.io/git-branch: master
+          sidecar.istio.io/inject: "true"
+        labels:
+          app: vertx-istio-circuit-breaker-name
+          provider: fabric8
+          group: io.openshift.booster
+      spec:
+        containers:
+        - env:
+          - name: KUBERNETES_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          image: vertx-istio-circuit-breaker-name:latest
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 180
+          name: vertx
+          ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+          - containerPort: 9779
+            name: prometheus
+            protocol: TCP
+          - containerPort: 8778
+            name: jolokia
+            protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+          securityContext:
+            privileged: false
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - vertx
+        from:
+          kind: ImageStreamTag
+          name: vertx-istio-circuit-breaker-name:latest
+      type: ImageChange
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    labels:
+      expose: "true"
+      app: vertx-istio-circuit-breaker-name
+      provider: fabric8
+      group: io.openshift.booster
+    name: vertx-istio-circuit-breaker-name
+  spec:
+    port:
+      targetPort: 8080
+    to:
+      kind: Service
+      name: vertx-istio-circuit-breaker-name
