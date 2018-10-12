@@ -25,3 +25,6 @@ buildNumber.properties
 !/.mvn/wrapper/maven-wrapper.jar
 .vertx/
 settings.json
+
+# OpenShift
+openshift.local.clusterup*
