@@ -188,6 +188,9 @@
       let callsOK = 0, callsFailed = 0;
 
       $("#invoke").click(function (e) {
+        // disable button to avoid creating multiple sets of workers
+        this.disabled = true;
+
         let $max = $('#max-concurrent');
         let workerNumber = Number.parseInt($max.val());
         // limit workers to 20
@@ -244,6 +247,8 @@
           }
           workers = undefined;
         }
+        // since we've stopped all the workers, we can re-enable start button
+        $('#invoke').prop('disabled', false);
         e.preventDefault();
       });
       $("#clear").click(function (e) {
