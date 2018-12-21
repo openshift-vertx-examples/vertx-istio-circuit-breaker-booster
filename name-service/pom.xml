@@ -22,7 +22,7 @@
   <parent>
     <groupId>io.openshift.booster</groupId>
     <artifactId>vertx-istio-circuit-breaker-parent</artifactId>
-    <version>3-SNAPSHOT</version>
+    <version>3</version>
   </parent>
 
   <artifactId>vertx-istio-circuit-breaker-name</artifactId>
